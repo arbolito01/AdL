@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Editar Cliente</title>
-    </head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Editar Cliente{% endblock %}
+
+{% block content %}
     <h1>Editar Cliente</h1>
-    <form method="post">
+    <form method="post" class="card p-4">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Guardar Cambios</button>
+        <button type="submit" class="btn btn-primary mt-3">Guardar Cambios</button>
     </form>
-    <p><a href="{% url 'lista_clientes' %}">Volver a la lista</a></p>
-</body>
-</html> 
+    <p class="mt-3"><a href="{% url 'lista_clientes' %}">Volver a la lista</a></p>
+{% endblock %}

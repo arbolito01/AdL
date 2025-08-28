@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalles de Cliente: {{ cliente.nombre }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        .container { max-width: 600px; margin: 0 auto; padding: 1em; border: 1px solid #ccc; border-radius: 1em; }
+        h1 { text-align: center; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 1em; }
+        strong { display: inline-block; width: 150px; }
+        .status-active { color: green; font-weight: bold; }
+        .status-inactive { color: red; font-weight: bold; }
+        .mikrotik-status-connected { color: green; }
+        .mikrotik-status-disconnected { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Detalles de Cliente</h1>
+        <h2>{{ cliente.nombre }}</h2>
+        <ul>
+            <li><strong>ID:</strong> {{ cliente.pk }}</li>
+            <li><strong>Dirección:</strong> {{ cliente.direccion }}</li>
+            <li><strong>Teléfono:</strong> {{ cliente.telefono }}</li>
+            <li><strong>ONU Serial:</strong> {{ cliente.onu_sn }}</li>
+            <li><strong>Plan de Servicio:</strong> {{ cliente.plan_servicio }}</li>
+            <li><strong>Fecha de Alta:</strong> {{ cliente.fecha_alta }}</li>
+            <li><strong>Estado de Servicio:</strong> 
+                {% if cliente.activo %}
+                    <span class="status-active">Activo</span>
+                {% else %}
+                    <span class="status-inactive">Inactivo</span>
+                    (Desactivado: {{ cliente.fecha_desactivacion }})
+                {% endif %}
+            </li>
+            <li><strong>Estado en MikroTik:</strong> 
+                {% if mikrotik_status == 'Conectado' %}
+                    <span class="mikrotik-status-connected">{{ mikrotik_status }}</span>
+                {% else %}
+                    <span class="mikrotik-status-disconnected">{{ mikrotik_status }}</span>
+                {% endif %}
+            </li>
+        </ul>
+        <p><a href="{% url 'editar_cliente' cliente.pk %}">Editar Cliente</a></p>
+        <p><a href="{% url 'lista_clientes' %}">Volver a la lista de clientes</a></p>
+    </div>
+</body>
+</html>

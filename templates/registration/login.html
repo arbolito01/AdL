@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f4f4; }
+        .login-box { padding: 2em; background: white; border: 1px solid #ccc; border-radius: 8px; text-align: center; }
+        .login-box h2 { margin-top: 0; }
+        .login-box p { margin: 1em 0; }
+        .login-box form div { margin-bottom: 1em; }
+        .login-box label { display: block; margin-bottom: .5em; font-weight: bold; }
+        .login-box input { width: 100%; padding: .5em; border: 1px solid #ccc; border-radius: .5em; }
+        .login-box button { padding: .75em 1.5em; background-color: #007bff; color: white; border: none; border-radius: .5em; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Iniciar Sesión</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+    </div>
+</body>
+</html>

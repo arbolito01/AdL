@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Monitoreo{% endblock %}
+
+{% block content %}
+    <h1>Dashboard de Monitoreo</h1>
+
+    {% if error_message %}
+        <div class="alert alert-danger" role="alert">
+            <h2>Error en la Conexión</h2>
+            <p>{{ error_message }}</p>
+        </div>
+    {% else %}
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Uso de CPU</h5>
+                        <p class="card-text fs-2 fw-bold text-primary">{{ cpu_load }}%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Memoria Libre</h5>
+                        <p class="card-text fs-2 fw-bold text-primary">{{ free_memory }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Tiempo de Actividad</h5>
+                        <p class="card-text fs-2 fw-bold text-primary">{{ uptime }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Usuarios Activos</h5>
+                        <p class="card-text fs-2 fw-bold text-primary">{{ active_users_count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Total de Clientes</h5>
+                        <p class="card-text fs-2 fw-bold text-primary">{{ total_users_count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
