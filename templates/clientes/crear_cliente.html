@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Nuevo Cliente</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        form { max-width: 500px; margin: 0 auto; padding: 1em; border: 1px solid #ccc; border-radius: 1em; }
+        div + div { margin-top: 1em; }
+        label { display: block; margin-bottom: .5em; font-weight: bold; }
+        input, select { width: 100%; padding: .5em; border: 1px solid #ccc; border-radius: .5em; }
+        .button { display: block; width: 100%; padding: .5em; color: white; background-color: #007bff; border: none; border-radius: .5em; cursor: pointer; }
+        .button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Crear Nuevo Cliente</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="button">Guardar Cliente</button>
+    </form>
+    <p><a href="{% url 'lista_clientes' %}">Volver a la lista de clientes</a></p>
+</body>
+</html>

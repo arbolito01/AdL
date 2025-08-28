@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Clientes</title>
+    <style>
+        table { width: 80%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Lista de Clientes</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>ONU SN</th>
+            <th>Plan</th>
+            <th>Estado</th>
+            <th>Acciones</th> </tr>
+    </thead>
+    <tbody>
+        {% for cliente in clientes %}
+        <tr>
+            <td>{{ cliente.nombre }}</td>
+            <td>{{ cliente.telefono }}</td>
+            <td>{{ cliente.onu_sn }}</td>
+            <td>{{ cliente.plan_servicio }}</td>
+            <td>
+                {% if cliente.activo %}
+                    Activo
+                {% else %}
+                    Inactivo ({{ cliente.fecha_desactivacion }})
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'editar_cliente' cliente.pk %}">Editar</a>
+                <form action="{% url 'desactivar_cliente' cliente.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">Desactivar</button>
+                </form>
+                <form action="{% url 'eliminar_cliente' cliente.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">Eliminar</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>
