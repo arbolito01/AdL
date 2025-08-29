@@ -22,4 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('clientes.urls')),
     path('accounts/', include('django.contrib.auth.urls')), # <-- Agrega esta línea
+    path('api/', include('api.urls')),
 ]

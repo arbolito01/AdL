@@ -8,34 +8,12 @@ from .forms import ClienteForm
 from datetime import date
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-
-# Importa las librerías de conexión
+import logging
 from librouteros import connect
-import paramiko
-import time
 from librouteros.query import Key
+from gestion_red.connect import connect_mikrotik, connect_olt, execute_olt_command
 
-
-# --- Función de SIMULACIÓN de la OLT ---
-def simular_olt_comando(comando):
-    """
-    Función que simula la ejecución de un comando en la OLT.
-    Esto evita que el sistema falle si no hay una OLT real conectada.
-    """
-    print(f"SIMULACIÓN: Comando de OLT ejecutado: {comando}")
-    # Aquí podrías añadir lógica para simular errores si fuera necesario.
-    return True
-
-
-# Conexión al MikroTik
-def connect_mikrotik():
-    api = connect(
-        username=settings.MIKROTIK_USER,
-        password=settings.MIKROTIK_PASSWORD,
-        host=settings.MIKROTIK_IP
-    )
-    return api
-
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 @login_required
 def dashboard(request):
@@ -98,14 +76,20 @@ def crear_cliente(request):
             cliente = form.save()
 
             api = None
+            tn = None
             try:
-                # 1. --- LÓGICA de SIMULACIÓN de la OLT ---
-                print("Iniciando simulación de configuración de OLT...")
-                simular_olt_comando("configure terminal")
-                simular_olt_comando(f"interface gpon 0/1")
-                simular_olt_comando(f"onu add {cliente.onu_sn} serial-number {cliente.onu_sn}")
-                simular_olt_comando("exit")
+                # 1. Configuración en la OLT (REAL)
+                logging.info("Iniciando aprovisionamiento en OLT...")
+                tn = connect_olt()
                 
+                # Comandos de ejemplo para la OLT ZTE
+                execute_olt_command(tn, "configure terminal")
+                execute_olt_command(tn, "interface gpon_olt-1/1/1")
+                execute_olt_command(tn, f"onu pre-config-mode serial-number {cliente.onu_sn}")
+                execute_olt_command(tn, "exit")
+                
+                logging.info(f"ONU {cliente.onu_sn} pre-configurada en OLT.")
+
                 # 2. Configuración en el MikroTik
                 api = connect_mikrotik()
                 secrets = api.path('ppp', 'secret')
@@ -115,14 +99,19 @@ def crear_cliente(request):
                     service='pppoe', 
                     profile=cliente.plan_servicio
                 )
+                logging.info(f"Cliente {cliente.nombre} creado en MikroTik.")
 
             except Exception as e:
-                cliente.delete()
+                if cliente:
+                    cliente.delete()
+                logging.error(f'Error al configurar equipos para {cliente.nombre}: {e}')
                 return render(request, 'error.html', {'error_message': f'Error al configurar equipos: {e}'})
 
             finally:
                 if api:
                     api.close()
+                if tn:
+                    tn.close()
 
             return redirect('lista_clientes')
     else:
@@ -178,6 +167,7 @@ def desactivar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     if cliente.activo:
         api = None
+        tn = None
         try:
             # 1. Desactivar en MikroTik
             api = connect_mikrotik()
@@ -186,21 +176,30 @@ def desactivar_cliente(request, pk):
             user = secrets.get(query={Key('name'): cliente.nombre})
             if user:
                 secrets.disable(user[0]['.id'])
+            logging.info(f"Cliente {cliente.nombre} desactivado en MikroTik.")
 
-            # 2. --- LÓGICA de SIMULACIÓN de la OLT ---
-            print("Iniciando simulación de desactivación de OLT...")
-            simular_olt_comando(f'service remove {cliente.onu_sn}')
+            # 2. Desactivar en la OLT
+            logging.info(f"Iniciando desactivación en OLT para cliente {cliente.nombre}...")
+            tn = connect_olt()
+            execute_olt_command(tn, "configure terminal")
+            execute_olt_command(tn, f"no onu service {cliente.onu_sn}")
+            execute_olt_command(tn, "exit")
+            logging.info(f"Servicio de ONU {cliente.onu_sn} desactivado en OLT.")
             
+            # 3. Actualizar la base de datos local
             cliente.activo = False
             cliente.fecha_desactivacion = date.today()
             cliente.save()
 
         except Exception as e:
+            logging.error(f'Error al desactivar cliente {cliente.nombre}: {e}')
             return render(request, 'error.html', {'error_message': f'Error al desactivar cliente: {e}'})
         
         finally:
             if api:
                 api.close()
+            if tn:
+                tn.close()
                 
     return redirect('lista_clientes')
 
@@ -210,6 +209,7 @@ def desactivar_cliente(request, pk):
 def eliminar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     api = None
+    tn = None
     try:
         # 1. Eliminar de MikroTik
         api = connect_mikrotik()
@@ -218,18 +218,27 @@ def eliminar_cliente(request, pk):
         user = secrets.get(query={Key('name'): cliente.nombre})
         if user:
             secrets.remove(user[0]['.id'])
+        logging.info(f"Cliente {cliente.nombre} eliminado de MikroTik.")
 
-        # 2. --- LÓGICA de SIMULACIÓN de la OLT ---
-        print("Iniciando simulación de eliminación de OLT...")
-        simular_olt_comando(f'no service {cliente.onu_sn}')
+        # 2. Eliminar de la OLT
+        logging.info(f"Iniciando eliminación en OLT para cliente {cliente.nombre}...")
+        tn = connect_olt()
+        execute_olt_command(tn, "configure terminal")
+        execute_olt_command(tn, f"no onu {cliente.onu_sn}")
+        execute_olt_command(tn, "exit")
+        logging.info(f"ONU {cliente.onu_sn} eliminada de OLT.")
         
+        # 3. Eliminar de la base de datos local
         cliente.delete()
         
     except Exception as e:
+        logging.error(f'Error al eliminar cliente {cliente.nombre}: {e}')
         return render(request, 'error.html', {'error_message': f'Error al eliminar cliente: {e}'})
 
     finally:
         if api:
             api.close()
+        if tn:
+            tn.close()
 
     return redirect('lista_clientes')
